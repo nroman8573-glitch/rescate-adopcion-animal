@@ -1,0 +1,43 @@
+@startuml
+title Diagrama de secuencia - Registro de un nuevo rescate
+autonumber
+
+actor "Ciudadano" as Ciudadano
+actor "Administrador" as Admin
+participant "GestorCasos\n<<Singleton>>" as Gestor
+participant "FabricaPerro\n<<Factory Method>>" as Fabrica
+participant "ExpedientePerro" as Exp
+participant "Rescatado\n<<State>>" as Estado
+participant "Voluntario\n<<Observer>>" as Vol
+
+Ciudadano -> Gestor : reportarRescate(datos)
+activate Gestor
+Gestor -> Gestor : getInstancia()
+note right of Gestor : Singleton: siempre se usa\nla misma instancia
+
+Gestor -> Fabrica : crearExpediente()
+activate Fabrica
+Fabrica -> Exp : new ExpedientePerro()
+activate Exp
+Exp -> Estado : establecer estado inicial
+Exp --> Fabrica : expediente
+deactivate Exp
+Fabrica --> Gestor : expediente
+deactivate Fabrica
+
+Gestor -> Gestor : expedientes.add(expediente)
+Gestor -> Vol : actualizar(expediente)
+note right of Vol : Observer: se notifica a\ntodos los voluntarios suscritos
+activate Vol
+Vol --> Gestor : notificacion recibida
+deactivate Vol
+
+Gestor --> Ciudadano : caso registrado
+
+Admin -> Gestor : asignarResponsable(expediente, voluntario)
+Gestor -> Exp : asignar responsable
+Vol -> Gestor : cambiarEstado(expediente)
+Gestor -> Exp : avanzarEstado()
+Exp -> Estado : siguiente(expediente)
+note right of Estado : State: Rescatado pasa\na En Tratamiento
+@enduml
