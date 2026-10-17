@@ -1,0 +1,145 @@
+@startuml
+skinparam classAttributeIconSize 0
+title Diagrama de clases - Sistema de Rescate y Adopcion Animal
+
+interface Observador {
+  + actualizar(expediente: Expediente): void
+}
+
+interface Sujeto {
+  + agregarObservador(o: Observador): void
+  + quitarObservador(o: Observador): void
+  + notificarObservadores(e: Expediente): void
+}
+
+class GestorCasos <<Singleton>> {
+  - {static} instancia: GestorCasos
+  - expedientes: List<Expediente>
+  - observadores: List<Observador>
+  - GestorCasos()
+  + {static} getInstancia(): GestorCasos
+  + registrarRescate(fabrica: FabricaExpediente): Expediente
+  + asignarResponsable(e: Expediente, v: Voluntario): void
+  + cambiarEstado(e: Expediente): void
+}
+
+abstract class Persona {
+  # id: int
+  # nombre: String
+  # telefono: String
+}
+
+class Voluntario {
+  + actualizar(expediente: Expediente): void
+  + atenderCaso(e: Expediente): void
+}
+
+class Veterinario {
+  - especialidad: String
+  + registrarTratamiento(e: Expediente): void
+}
+
+class Administrador {
+  + gestionarAdopcion(e: Expediente): void
+}
+
+abstract class Expediente {
+  # id: int
+  # nombreAnimal: String
+  # fechaIngreso: Date
+  # ubicacion: String
+  # estado: EstadoCaso
+  + avanzarEstado(): void
+  + {abstract} obtenerCuidadosBasicos(): String
+}
+
+class ExpedientePerro {
+  + obtenerCuidadosBasicos(): String
+}
+
+class ExpedienteGato {
+  + obtenerCuidadosBasicos(): String
+}
+
+class ExpedienteFaunaSilvestre {
+  + obtenerCuidadosBasicos(): String
+}
+
+abstract class FabricaExpediente <<Factory Method>> {
+  + {abstract} crearExpediente(): Expediente
+}
+
+class FabricaPerro {
+  + crearExpediente(): Expediente
+}
+
+class FabricaGato {
+  + crearExpediente(): Expediente
+}
+
+class FabricaFaunaSilvestre {
+  + crearExpediente(): Expediente
+}
+
+interface EstadoCaso <<State>> {
+  + siguiente(e: Expediente): void
+  + nombre(): String
+}
+
+class Rescatado {
+}
+
+class EnTratamiento {
+}
+
+class EnAdopcion {
+}
+
+class Adoptado {
+}
+
+Sujeto <|.. GestorCasos
+Observador <|.. Voluntario
+GestorCasos o-- "0..*" Observador
+GestorCasos o-- "0..*" Expediente
+GestorCasos ..> FabricaExpediente : usa
+
+Persona <|-- Voluntario
+Voluntario <|-- Veterinario
+Persona <|-- Administrador
+
+Expediente <|-- ExpedientePerro
+Expediente <|-- ExpedienteGato
+Expediente <|-- ExpedienteFaunaSilvestre
+Expediente --> "1" EstadoCaso
+Expediente --> "0..1" Voluntario : responsable
+
+FabricaExpediente <|-- FabricaPerro
+FabricaExpediente <|-- FabricaGato
+FabricaExpediente <|-- FabricaFaunaSilvestre
+FabricaPerro ..> ExpedientePerro : crea
+FabricaGato ..> ExpedienteGato : crea
+FabricaFaunaSilvestre ..> ExpedienteFaunaSilvestre : crea
+
+EstadoCaso <|.. Rescatado
+EstadoCaso <|.. EnTratamiento
+EstadoCaso <|.. EnAdopcion
+EstadoCaso <|.. Adoptado
+
+note right of GestorCasos
+  Singleton: una sola instancia
+  del motor de gestion de casos.
+  Observer: es el Sujeto que
+  notifica a los voluntarios.
+end note
+
+note bottom of FabricaExpediente
+  Factory Method: cada fabrica
+  crea el expediente segun la especie.
+end note
+
+note bottom of EstadoCaso
+  State: el comportamiento depende
+  del estado del caso.
+end note
+@enduml
